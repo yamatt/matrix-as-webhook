@@ -1,0 +1,19 @@
+{
+  "routes": [
+    {
+      "pattern": "alert",
+      "webhook_url": "http://localhost:9000/alerts",
+      "method": "POST"
+    },
+    {
+      "pattern": "notification",
+      "webhook_url": "http://localhost:9000/notifications",
+      "method": "POST"
+    },
+    {
+      "pattern": "",
+      "webhook_url": "http://localhost:9000/default",
+      "method": "POST"
+    }
+  ]
+}
