@@ -8,19 +8,24 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 )
 
 // AppServer represents the Matrix Application Server
 type AppServer struct {
-	config *Config
+	config     *Config
+	httpClient *http.Client
 }
 
 // NewAppServer creates a new application server instance
 func NewAppServer(config *Config) *AppServer {
 	return &AppServer{
 		config: config,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
 	}
 }
 
@@ -146,8 +151,7 @@ func (s *AppServer) sendWebhook(route RouteConfig, event MatrixEvent, messageBod
 	req.Header.Set("Content-Type", "application/json")
 
 	// Send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		log.Printf("Error sending webhook to %s: %v", route.WebhookURL, err)
 		return
@@ -158,8 +162,12 @@ func (s *AppServer) sendWebhook(route RouteConfig, event MatrixEvent, messageBod
 
 	// Log response body if error status
 	if resp.StatusCode >= 400 {
-		respBody, _ := io.ReadAll(resp.Body)
-		log.Printf("Webhook error response: %s", string(respBody))
+		respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1024*1024)) // Limit to 1MB
+		if err != nil {
+			log.Printf("Error reading webhook response: %v", err)
+		} else {
+			log.Printf("Webhook error response: %s", string(respBody))
+		}
 	}
 }
 

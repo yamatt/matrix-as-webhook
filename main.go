@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 )
 
 func main() {
@@ -26,6 +25,5 @@ func main() {
 
 	if err := http.ListenAndServe(addr, server.Router()); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
-		os.Exit(1)
 	}
 }
