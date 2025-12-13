@@ -11,8 +11,20 @@ A Matrix Application Server written in Go to route messages as webhooks. This se
 
 ## Installation
 
+### Using Go
+
 ```bash
 go build -o go-as-webhook
+```
+
+### Using Docker
+
+```bash
+# Build the image
+docker build -t go-as-webhook .
+
+# Run the container
+docker run -p 8008:8008 -v $(pwd)/config.json:/app/config.json go-as-webhook -config /app/config.json
 ```
 
 ## Usage
