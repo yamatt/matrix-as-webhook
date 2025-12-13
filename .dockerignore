@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Binary
+go-as-webhook
+
+# Test files
+*.test
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Editor
+.vscode
+.idea
+
+# Documentation
+README.md
+LICENSE
+*.md
+
+# Example files (keeping these)
+!config.example.json
+!registration.example.yaml
