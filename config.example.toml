@@ -1,0 +1,19 @@
+# Example configuration for as-webhook
+
+[[routes]]
+name = "alerts"
+selector = "event.type == 'm.room.message' && event.content.body.contains('alert')"
+webhook_url = "http://localhost:9000/alerts"
+method = "POST"
+
+[[routes]]
+name = "notifications"
+selector = "event.content.body.contains('notification')"
+webhook_url = "http://localhost:9000/notifications"
+method = "POST"
+
+[[routes]]
+name = "default"
+selector = "true"
+webhook_url = "http://localhost:9000/default"
+method = "POST"

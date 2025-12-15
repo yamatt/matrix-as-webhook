@@ -32,4 +32,4 @@ go.work.sum
 # .vscode/
 
 # Binary
-go-as-webhook
+/as-webhook

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -6,16 +6,18 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	configpkg "github.com/yamatt/go-as-webhook/internal/config"
 )
 
 func TestHandleHealth(t *testing.T) {
-	config := NewDefaultConfig()
-	server := NewAppServer(config)
+	cfg := configpkg.NewDefault()
+	srv := NewAppServer(cfg)
 
 	req := httptest.NewRequest("GET", "/health", nil)
 	w := httptest.NewRecorder()
 
-	server.Router().ServeHTTP(w, req)
+	srv.Router().ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
@@ -32,8 +34,8 @@ func TestHandleHealth(t *testing.T) {
 }
 
 func TestHandleTransaction(t *testing.T) {
-	config := NewDefaultConfig()
-	server := NewAppServer(config)
+	cfg := configpkg.NewDefault()
+	srv := NewAppServer(cfg)
 
 	transaction := Transaction{
 		Events: []MatrixEvent{
@@ -59,7 +61,7 @@ func TestHandleTransaction(t *testing.T) {
 	req := httptest.NewRequest("PUT", "/_matrix/app/v1/transactions/test123", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
-	server.Router().ServeHTTP(w, req)
+	srv.Router().ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
@@ -67,13 +69,13 @@ func TestHandleTransaction(t *testing.T) {
 }
 
 func TestHandleRoom(t *testing.T) {
-	config := NewDefaultConfig()
-	server := NewAppServer(config)
+	cfg := configpkg.NewDefault()
+	srv := NewAppServer(cfg)
 
 	req := httptest.NewRequest("GET", "/_matrix/app/v1/rooms/%23room%3Adomain.com", nil)
 	w := httptest.NewRecorder()
 
-	server.Router().ServeHTTP(w, req)
+	srv.Router().ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {
 		t.Errorf("Expected status 404, got %d", w.Code)
@@ -90,13 +92,13 @@ func TestHandleRoom(t *testing.T) {
 }
 
 func TestHandleUser(t *testing.T) {
-	config := NewDefaultConfig()
-	server := NewAppServer(config)
+	cfg := configpkg.NewDefault()
+	srv := NewAppServer(cfg)
 
 	req := httptest.NewRequest("GET", "/_matrix/app/v1/users/%40user%3Adomain.com", nil)
 	w := httptest.NewRecorder()
 
-	server.Router().ServeHTTP(w, req)
+	srv.Router().ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {
 		t.Errorf("Expected status 404, got %d", w.Code)
@@ -113,7 +115,6 @@ func TestHandleUser(t *testing.T) {
 }
 
 func TestProcessEventWithWebhook(t *testing.T) {
-	// Create a test webhook server
 	webhookCalled := false
 	var receivedPayload map[string]interface{}
 
@@ -126,18 +127,18 @@ func TestProcessEventWithWebhook(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	// Create config with test webhook
-	config := &Config{
-		Routes: []RouteConfig{
+	cfg := &configpkg.Config{
+		Routes: []configpkg.RouteConfig{
 			{
-				Pattern:    "test",
+				Name:       "match-test",
+				Selector:   "event.content.body.contains('test')",
 				WebhookURL: testServer.URL,
 				Method:     "POST",
 			},
 		},
 	}
 
-	server := NewAppServer(config)
+	srv := NewAppServer(cfg)
 
 	event := MatrixEvent{
 		Type:      "m.room.message",
@@ -151,7 +152,7 @@ func TestProcessEventWithWebhook(t *testing.T) {
 		},
 	}
 
-	server.processEvent(event)
+	srv.processEvent(event)
 
 	if !webhookCalled {
 		t.Error("Expected webhook to be called")
@@ -179,17 +180,18 @@ func TestProcessEventNoMatch(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	config := &Config{
-		Routes: []RouteConfig{
+	cfg := &configpkg.Config{
+		Routes: []configpkg.RouteConfig{
 			{
-				Pattern:    "alert",
+				Name:       "no-match",
+				Selector:   "event.content.body.contains('alert')",
 				WebhookURL: testServer.URL,
 				Method:     "POST",
 			},
 		},
 	}
 
-	server := NewAppServer(config)
+	srv := NewAppServer(cfg)
 
 	event := MatrixEvent{
 		Type:      "m.room.message",
@@ -203,7 +205,7 @@ func TestProcessEventNoMatch(t *testing.T) {
 		},
 	}
 
-	server.processEvent(event)
+	srv.processEvent(event)
 
 	if webhookCalled {
 		t.Error("Expected webhook not to be called when pattern doesn't match")
@@ -219,17 +221,18 @@ func TestProcessEventEmptyPattern(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	config := &Config{
-		Routes: []RouteConfig{
+	cfg := &configpkg.Config{
+		Routes: []configpkg.RouteConfig{
 			{
-				Pattern:    "",
+				Name:       "match-all",
+				Selector:   "true",
 				WebhookURL: testServer.URL,
 				Method:     "POST",
 			},
 		},
 	}
 
-	server := NewAppServer(config)
+	srv := NewAppServer(cfg)
 
 	event := MatrixEvent{
 		Type:      "m.room.message",
@@ -243,7 +246,7 @@ func TestProcessEventEmptyPattern(t *testing.T) {
 		},
 	}
 
-	server.processEvent(event)
+	srv.processEvent(event)
 
 	if !webhookCalled {
 		t.Error("Expected webhook to be called with empty pattern (matches all)")

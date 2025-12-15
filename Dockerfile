@@ -11,10 +11,10 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy source code
-COPY *.go ./
+COPY . .
 
 # Build the binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o go-as-webhook .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o as-webhook ./cmd/go-as-webhook
 
 # Final stage - using scratch for minimal image
 FROM scratch
@@ -25,14 +25,14 @@ WORKDIR /app
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Copy the binary from builder
-COPY --from=builder /build/go-as-webhook /app/go-as-webhook
+COPY --from=builder /build/as-webhook /app/as-webhook
 
 # Copy example config
-COPY config.example.json /app/config.example.json
+COPY config.example.toml /app/config.example.toml
 
 # Expose the default port
-EXPOSE 8008
+EXPOSE 8080
 
 # Run the binary
-ENTRYPOINT ["/app/go-as-webhook"]
-CMD ["-port", "8008"]
+ENTRYPOINT ["/app/as-webhook"]
+CMD ["-port", "8080"]

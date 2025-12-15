@@ -3,7 +3,7 @@
 .gitignore
 
 # Binary
-go-as-webhook
+as-webhook
 
 # Test files
 *.test
@@ -22,5 +22,5 @@ LICENSE
 *.md
 
 # Example files (keeping these)
-!config.example.json
+!config.example.toml
 !registration.example.yaml

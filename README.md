@@ -1,4 +1,4 @@
-# go-as-webhook
+# as-webhook
 
 A Matrix Application Server written in Go to route messages as webhooks. This server receives messages from Matrix homeservers and forwards them to HTTP endpoints based on configurable routing rules.
 
@@ -6,7 +6,7 @@ A Matrix Application Server written in Go to route messages as webhooks. This se
 
 - **Matrix Application Server Protocol**: Implements the Matrix AS API endpoints
 - **Message Routing**: Route messages to different webhooks based on message content patterns
-- **Configurable**: JSON-based configuration for routing rules
+- **Configurable**: TOML-based configuration for routing rules
 - **Lightweight**: Simple, focused implementation in Go
 
 ## Installation
@@ -14,86 +14,64 @@ A Matrix Application Server written in Go to route messages as webhooks. This se
 ### Using Go
 
 ```bash
-go build -o go-as-webhook
+go build -o as-webhook ./cmd/go-as-webhook
 ```
 
 ### Using Docker
 
 ```bash
 # Build the image
-docker build -t go-as-webhook .
+docker build -t as-webhook .
 
 # Run the container
-docker run -p 8008:8008 -v $(pwd)/config.json:/app/config.json go-as-webhook -config /app/config.json
+docker run -p 8080:8080 -v $(pwd)/config.toml:/app/config.toml as-webhook -config /app/config.toml
 ```
 
 ## Usage
 
 ```bash
-./go-as-webhook -config config.json -port 8008
+# With positional config argument
+./as-webhook config.toml
+
+# Or with -config flag
+./as-webhook -config config.toml -port 8080
 ```
 
 ### Command-line Options
 
-- `-config`: Path to configuration file (default: `config.json`)
-- `-port`: Port to listen on (default: `8008`)
+- `<config>`: Config file path as positional argument (overrides `-config` flag)
+- `-config`: Path to configuration file (default: `config.toml`)
+- `-port`: Port to listen on (default: `8080`)
 
 ## Configuration
 
-Create a `config.json` file to define your routing rules:
+Create a `config.toml` file to define your routing rules (CEL selectors):
 
-```json
-{
-  "routes": [
-    {
-      "pattern": "alert",
-      "webhook_url": "http://localhost:9000/alerts",
-      "method": "POST"
-    },
-    {
-      "pattern": "notification",
-      "webhook_url": "http://localhost:9000/notifications",
-      "method": "POST"
-    },
-    {
-      "pattern": "",
-      "webhook_url": "http://localhost:9000/default",
-      "method": "POST"
-    }
-  ]
-}
+```toml
+[[routes]]
+name = "alerts"
+selector = "event.type == 'm.room.message' && event.content.body.contains('alert')"
+webhook_url = "http://localhost:9000/alerts"
+method = "POST"
+
+[[routes]]
+name = "notifications"
+selector = "event.content.body.contains('notification')"
+webhook_url = "http://localhost:9000/notifications"
+method = "POST"
+
+[[routes]]
+name = "default"
+selector = "true"
+webhook_url = "http://localhost:9000/default"
+method = "POST"
 ```
 
 ### Configuration Options
 
-- `pattern`: Text pattern to match in message body (uses substring matching). Empty string matches all messages.
+- `selector`: CEL expression evaluated against the Matrix event as `event`. Return `true` to match (e.g., `event.content.body.contains('alert')`).
 - `webhook_url`: The HTTP endpoint to send matched messages to
 - `method`: HTTP method to use (default: `POST`)
-
-## Matrix Homeserver Configuration
-
-To register this application service with your Matrix homeserver, create a registration file (e.g., `registration.yaml`):
-
-```yaml
-id: webhook-as
-url: http://localhost:8008
-as_token: your-application-service-token
-hs_token: your-homeserver-token
-sender_localpart: webhook_bot
-namespaces:
-  users:
-    - exclusive: false
-      regex: '@.*:yourdomain.com'
-  rooms: []
-  aliases: []
-```
-
-Then reference this file in your homeserver's configuration (e.g., for Synapse, add to `homeserver.yaml`):
-
-```yaml
-app_service_config_files:
-  - /path/to/registration.yaml
-```
 
 ## Webhook Payload
 
