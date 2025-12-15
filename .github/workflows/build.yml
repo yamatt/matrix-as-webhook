@@ -54,7 +54,7 @@ jobs:
           chmod +x as-webhook
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: as-webhook-${{ github.sha }}
           path: as-webhook
@@ -86,7 +86,7 @@ jobs:
           docker save as-webhook:${{ github.sha }} | gzip > as-webhook-docker.tar.gz
 
       - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: as-webhook-docker-${{ github.sha }}
           path: as-webhook-docker.tar.gz
