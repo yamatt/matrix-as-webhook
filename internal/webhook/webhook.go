@@ -2,6 +2,9 @@ package webhook
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"log"
@@ -26,9 +29,10 @@ func NewSender(timeout time.Duration) *Sender {
 
 // Request represents a webhook request to be sent.
 type Request struct {
-	URL     string
-	Method  string
-	Payload map[string]interface{}
+	URL          string
+	Method       string
+	Payload      map[string]interface{}
+	SharedSecret string // Optional shared secret for HMAC-SHA256 signing
 }
 
 // Response represents the result of sending a webhook.
@@ -59,6 +63,13 @@ func (s *Sender) Send(req Request) Response {
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 
+	// Add signature header if shared secret is provided
+	if req.SharedSecret != "" {
+		signature := generateSignature(payloadBytes, req.SharedSecret)
+		httpReq.Header.Set("X-Webhook-Signature", signature)
+		log.Printf("Webhook: added signature header to request")
+	}
+
 	resp, err := s.client.Do(httpReq)
 	if err != nil {
 		log.Printf("Webhook: error sending to %s: %v", req.URL, err)
@@ -79,4 +90,13 @@ func (s *Sender) Send(req Request) Response {
 	}
 
 	return Response{StatusCode: resp.StatusCode, Body: respBody}
+}
+
+// generateSignature creates an HMAC-SHA256 signature of the payload.
+// The signature is hex-encoded and prefixed with "sha256=" for clarity.
+func generateSignature(payload []byte, sharedSecret string) string {
+	h := hmac.New(sha256.New, []byte(sharedSecret))
+	h.Write(payload)
+	signature := hex.EncodeToString(h.Sum(nil))
+	return "sha256=" + signature
 }

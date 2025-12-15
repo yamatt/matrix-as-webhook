@@ -7,6 +7,7 @@ webhook_url = "http://localhost:9000/alerts"
 method = "POST"
 # stop_on_match = true  # Uncomment to prevent further routes from being evaluated
 # send_body = true      # Uncomment to control message body inclusion (default: true)
+# shared_secret = "your-secret-key"  # Uncomment to sign webhook requests with HMAC-SHA256
 
 [[routes]]
 name = "notifications"
@@ -15,6 +16,7 @@ webhook_url = "http://localhost:9000/notifications"
 method = "POST"
 stop_on_match = true                                     # Stop evaluating further routes if this matches
 send_body = false                                        # Don't include message body in webhook
+shared_secret = "notifications-secret"                   # Sign webhook requests
 
 [[routes]]
 name = "default"

@@ -72,6 +72,103 @@ method = "POST"
 - `selector`: CEL expression evaluated against the Matrix event as `event`. Return `true` to match (e.g., `event.content.body.contains('alert')`).
 - `webhook_url`: The HTTP endpoint to send matched messages to
 - `method`: HTTP method to use (default: `POST`)
+- `stop_on_match`: If `true`, prevents further routes from being evaluated after this route matches (default: `false`)
+- `send_body`: If `false`, excludes the `message` field from the webhook payload (default: `true`)
+- `shared_secret`: Optional secret key for signing webhook requests with HMAC-SHA256
+
+## Webhook Authentication
+
+To verify that webhook requests come from as-webhook, configure a `shared_secret` for each route:
+
+```toml
+[[routes]]
+name = "secure-endpoint"
+selector = "true"
+webhook_url = "https://myserver.com/webhook"
+shared_secret = "my-secret-key-12345"
+```
+
+When a `shared_secret` is configured, as-webhook signs each webhook request using HMAC-SHA256 and includes the signature in the `X-Webhook-Signature` header:
+
+```
+X-Webhook-Signature: sha256=abcdef0123456789...
+```
+
+### Verifying Signatures
+
+Your webhook endpoint should verify the signature using the shared secret:
+
+**Python example:**
+```python
+import hmac
+import hashlib
+import json
+
+def verify_webhook(request, shared_secret):
+    # Get the signature from the header
+    signature = request.headers.get('X-Webhook-Signature', '')
+
+    # Get the raw body
+    body = request.get_data()
+
+    # Compute the expected signature
+    expected_sig = 'sha256=' + hmac.new(
+        shared_secret.encode(),
+        body,
+        hashlib.sha256
+    ).hexdigest()
+
+    # Verify using constant-time comparison
+    return hmac.compare_digest(signature, expected_sig)
+```
+
+**Go example:**
+```go
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
+	"net/http"
+)
+
+func verifyWebhook(r *http.Request, sharedSecret string) bool {
+	signature := r.Header.Get("X-Webhook-Signature")
+	if signature == "" {
+		return false
+	}
+
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	h := hmac.New(sha256.New, []byte(sharedSecret))
+	h.Write(body)
+	expectedSig := "sha256=" + hex.EncodeToString(h.Sum(nil))
+
+	return hmac.Equal([]byte(signature), []byte(expectedSig))
+}
+```
+
+**Node.js example:**
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(req, sharedSecret) {
+	const signature = req.headers['x-webhook-signature'];
+	if (!signature) return false;
+
+	const hmac = crypto.createHmac('sha256', sharedSecret);
+	hmac.update(req.rawBody); // Make sure you capture the raw body
+	const expectedSig = 'sha256=' + hmac.digest('hex');
+
+	return crypto.timingSafeEqual(
+		Buffer.from(signature),
+		Buffer.from(expectedSig)
+	);
+}
+```
+
+**Important:** Always use constant-time comparison functions (like `hmac.compare_digest`, `crypto.timingSafeEqual`, etc.) to prevent timing attacks.
 
 ## Webhook Payload
 

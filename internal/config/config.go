@@ -28,6 +28,9 @@ type RouteConfig struct {
 	StopOnMatch bool `toml:"stop_on_match,omitempty"`
 	// SendBody controls whether the message body is included in the webhook payload (default: true)
 	SendBody *bool `toml:"send_body,omitempty"`
+	// SharedSecret is used to sign webhook requests with HMAC-SHA256 (optional)
+	// The signature is sent in the X-Webhook-Signature header
+	SharedSecret string `toml:"shared_secret,omitempty"`
 }
 
 // Load reads configuration from a TOML file and applies defaults.

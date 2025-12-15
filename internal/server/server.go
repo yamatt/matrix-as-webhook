@@ -142,9 +142,10 @@ func (s *AppServer) dispatchWebhook(event MatrixEvent, target router.Target) {
 	}
 
 	req := webhook.Request{
-		URL:     target.URL,
-		Method:  target.Method,
-		Payload: payload,
+		URL:          target.URL,
+		Method:       target.Method,
+		Payload:      payload,
+		SharedSecret: target.SharedSecret,
 	}
 
 	_ = s.webhookSender.Send(req)

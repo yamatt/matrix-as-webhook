@@ -9,11 +9,12 @@ import (
 )
 
 type Target struct {
-	Name        string
-	URL         string
-	Method      string
-	StopOnMatch bool
-	SendBody    bool
+	Name         string
+	URL          string
+	Method       string
+	StopOnMatch  bool
+	SendBody     bool
+	SharedSecret string
 }
 
 type compiledRoute struct {
@@ -82,11 +83,12 @@ func (r *Resolver) Resolve(event interface{}) ([]Target, error) {
 				sendBody = *rt.conf.SendBody
 			}
 			target := Target{
-				Name:        rt.conf.Name,
-				URL:         rt.conf.WebhookURL,
-				Method:      m,
-				StopOnMatch: rt.conf.StopOnMatch,
-				SendBody:    sendBody,
+				Name:         rt.conf.Name,
+				URL:          rt.conf.WebhookURL,
+				Method:       m,
+				StopOnMatch:  rt.conf.StopOnMatch,
+				SendBody:     sendBody,
+				SharedSecret: rt.conf.SharedSecret,
 			}
 			out = append(out, target)
 			if rt.conf.StopOnMatch {
