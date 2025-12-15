@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,19 +11,20 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/yamatt/go-as-webhook/internal/config"
 	"github.com/yamatt/go-as-webhook/internal/router"
+	"github.com/yamatt/go-as-webhook/internal/webhook"
 )
 
 // AppServer represents the Matrix Application Server.
 type AppServer struct {
-	config     *config.Config
-	httpClient *http.Client
+	config        *config.Config
+	webhookSender *webhook.Sender
 }
 
 // NewAppServer creates a new application server instance.
 func NewAppServer(cfg *config.Config) *AppServer {
 	return &AppServer{
-		config:     cfg,
-		httpClient: &http.Client{Timeout: 30 * time.Second},
+		config:        cfg,
+		webhookSender: webhook.NewSender(30 * time.Second),
 	}
 }
 
@@ -118,52 +118,36 @@ func (s *AppServer) processEvent(event MatrixEvent) {
 	}
 	for _, t := range targets {
 		log.Printf("Forwarding event %s to route '%s' -> %s (%s)", event.EventID, t.Name, t.URL, t.Method)
-		s.sendWebhook(config.RouteConfig{WebhookURL: t.URL, Method: t.Method}, event, body)
+		s.dispatchWebhook(event, t)
 	}
 }
 
-func (s *AppServer) sendWebhook(route config.RouteConfig, event MatrixEvent, messageBody string) {
+// dispatchWebhook constructs a webhook payload and sends it via the webhook module.
+func (s *AppServer) dispatchWebhook(event MatrixEvent, target router.Target) {
 	payload := map[string]interface{}{
 		"event_id":   event.EventID,
 		"room_id":    event.RoomID,
 		"sender":     event.Sender,
 		"timestamp":  event.Timestamp,
-		"message":    messageBody,
 		"content":    event.Content,
 		"event_type": event.Type,
 	}
 
-	log.Printf("Sending webhook to %s with method %s", route.WebhookURL, route.Method)
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		log.Printf("Error marshaling webhook payload: %v", err)
-		return
-	}
-
-	req, err := http.NewRequest(route.Method, route.WebhookURL, bytes.NewBuffer(payloadBytes))
-	if err != nil {
-		log.Printf("Error creating webhook request: %v", err)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		log.Printf("Error sending webhook to %s: %v", route.WebhookURL, err)
-		return
-	}
-	defer resp.Body.Close()
-
-	log.Printf("Webhook sent to %s, status: %d", route.WebhookURL, resp.StatusCode)
-
-	if resp.StatusCode >= 400 {
-		respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1024*1024))
-		if err != nil {
-			log.Printf("Error reading webhook response: %v", err)
-		} else {
-			log.Printf("Webhook error response: %s", string(respBody))
+	// Conditionally include message body based on send_body flag
+	if target.SendBody {
+		body, ok := event.Content["body"].(string)
+		if ok {
+			payload["message"] = body
 		}
 	}
+
+	req := webhook.Request{
+		URL:     target.URL,
+		Method:  target.Method,
+		Payload: payload,
+	}
+
+	_ = s.webhookSender.Send(req)
 }
 
 func (s *AppServer) handleRoom(w http.ResponseWriter, r *http.Request) {

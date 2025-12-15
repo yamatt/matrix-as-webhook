@@ -171,6 +171,124 @@ func TestProcessEventWithWebhook(t *testing.T) {
 	}
 }
 
+func TestProcessEventSendBodyFalse(t *testing.T) {
+	webhookCalled := false
+	var receivedPayload map[string]interface{}
+
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		webhookCalled = true
+		if err := json.NewDecoder(r.Body).Decode(&receivedPayload); err != nil {
+			t.Fatalf("Failed to decode payload: %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer testServer.Close()
+
+	sendBodyFalse := false
+	cfg := &configpkg.Config{
+		Routes: []configpkg.RouteConfig{
+			{
+				Name:       "no-body",
+				Selector:   "true",
+				WebhookURL: testServer.URL,
+				Method:     "POST",
+				SendBody:   &sendBodyFalse,
+			},
+		},
+	}
+
+	srv := NewAppServer(cfg)
+
+	event := MatrixEvent{
+		Type:      "m.room.message",
+		EventID:   "$test_event",
+		RoomID:    "!room:domain.com",
+		Sender:    "@user:domain.com",
+		Timestamp: 1234567890,
+		Content: map[string]interface{}{
+			"body":    "this is a test message",
+			"msgtype": "m.text",
+		},
+	}
+
+	srv.processEvent(event)
+
+	if !webhookCalled {
+		t.Error("Expected webhook to be called")
+	}
+
+	if receivedPayload == nil {
+		t.Fatal("No payload received")
+	}
+
+	if _, hasMessage := receivedPayload["message"]; hasMessage {
+		t.Errorf("Expected message field to be absent (send_body=false), but it was present: %v", receivedPayload["message"])
+	}
+
+	if receivedPayload["event_id"] != "$test_event" {
+		t.Errorf("Expected event_id '$test_event', got '%s'", receivedPayload["event_id"])
+	}
+}
+
+func TestProcessEventStopOnMatch(t *testing.T) {
+	firstWebhookCalled := false
+	secondWebhookCalled := false
+
+	firstServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		firstWebhookCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer firstServer.Close()
+
+	secondServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		secondWebhookCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer secondServer.Close()
+
+	cfg := &configpkg.Config{
+		Routes: []configpkg.RouteConfig{
+			{
+				Name:        "stop-route",
+				Selector:    "true",
+				WebhookURL:  firstServer.URL,
+				Method:      "POST",
+				StopOnMatch: true,
+			},
+			{
+				Name:       "should-not-match",
+				Selector:   "true",
+				WebhookURL: secondServer.URL,
+				Method:     "POST",
+			},
+		},
+	}
+
+	srv := NewAppServer(cfg)
+
+	event := MatrixEvent{
+		Type:      "m.room.message",
+		EventID:   "$test_event",
+		RoomID:    "!room:domain.com",
+		Sender:    "@user:domain.com",
+		Timestamp: 1234567890,
+		Content: map[string]interface{}{
+			"body":    "test message",
+			"msgtype": "m.text",
+		},
+	}
+
+	srv.processEvent(event)
+
+	if !firstWebhookCalled {
+		t.Error("Expected first webhook to be called")
+	}
+
+	if secondWebhookCalled {
+		t.Error("Expected second webhook NOT to be called due to stop_on_match")
+	}
+}
+
 func TestProcessEventNoMatch(t *testing.T) {
 	webhookCalled := false
 

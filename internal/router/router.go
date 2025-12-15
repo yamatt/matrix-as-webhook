@@ -9,9 +9,11 @@ import (
 )
 
 type Target struct {
-	Name   string
-	URL    string
-	Method string
+	Name        string
+	URL         string
+	Method      string
+	StopOnMatch bool
+	SendBody    bool
 }
 
 type compiledRoute struct {
@@ -75,7 +77,22 @@ func (r *Resolver) Resolve(event interface{}) ([]Target, error) {
 			if m == "" {
 				m = "POST"
 			}
-			out = append(out, Target{Name: rt.conf.Name, URL: rt.conf.WebhookURL, Method: m})
+			sendBody := true
+			if rt.conf.SendBody != nil {
+				sendBody = *rt.conf.SendBody
+			}
+			target := Target{
+				Name:        rt.conf.Name,
+				URL:         rt.conf.WebhookURL,
+				Method:      m,
+				StopOnMatch: rt.conf.StopOnMatch,
+				SendBody:    sendBody,
+			}
+			out = append(out, target)
+			if rt.conf.StopOnMatch {
+				log.Printf("Router: stop_on_match enabled for route '%s', stopping evaluation", rt.conf.Name)
+				break
+			}
 		} else {
 			log.Printf("Router: selector did not match for route '%s'", rt.conf.Name)
 		}

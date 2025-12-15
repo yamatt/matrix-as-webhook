@@ -24,6 +24,10 @@ type RouteConfig struct {
 	WebhookURL string `toml:"webhook_url"`
 	// Method is the HTTP method to use (default: POST)
 	Method string `toml:"method,omitempty"`
+	// StopOnMatch prevents further routes from being evaluated if this route matches (default: false)
+	StopOnMatch bool `toml:"stop_on_match,omitempty"`
+	// SendBody controls whether the message body is included in the webhook payload (default: true)
+	SendBody *bool `toml:"send_body,omitempty"`
 }
 
 // Load reads configuration from a TOML file and applies defaults.
@@ -60,6 +64,11 @@ func ApplyDefaults(cfg *Config) {
 		}
 		if r.Name == "" {
 			r.Name = r.WebhookURL
+		}
+		// Default SendBody to true if not specified
+		if r.SendBody == nil {
+			v := true
+			r.SendBody = &v
 		}
 	}
 }

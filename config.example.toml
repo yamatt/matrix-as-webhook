@@ -5,12 +5,16 @@ name = "alerts"
 selector = "event.type == 'm.room.message' && event.content.body.contains('alert')"
 webhook_url = "http://localhost:9000/alerts"
 method = "POST"
+# stop_on_match = true  # Uncomment to prevent further routes from being evaluated
+# send_body = true      # Uncomment to control message body inclusion (default: true)
 
 [[routes]]
 name = "notifications"
 selector = "event.content.body.contains('notification')"
 webhook_url = "http://localhost:9000/notifications"
 method = "POST"
+stop_on_match = true                                     # Stop evaluating further routes if this matches
+send_body = false                                        # Don't include message body in webhook
 
 [[routes]]
 name = "default"
