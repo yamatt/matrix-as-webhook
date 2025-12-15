@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/build.yml"
+      - "**.go"
+      - "cmd/**"
+      - "internal/**"
+      - "go.mod"
+      - "go.sum"
+      - ".dockerignore"
+      - "Dockerfile"
 
 jobs:
   test:
