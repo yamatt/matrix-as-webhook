@@ -16,8 +16,8 @@ COPY . .
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o as-webhook ./cmd/go-as-webhook
 
-# Final stage - using scratch for minimal image
-FROM scratch
+# Final stage - using alpine for lightweight OS with shell access
+FROM alpine:latest
 
 WORKDIR /app
 
