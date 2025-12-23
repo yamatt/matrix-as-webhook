@@ -28,11 +28,11 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/as-webhook /app/as-webhook
 
 # Copy example config
-COPY config.example.toml /app/config.example.toml
+COPY config.example.toml /app/config/config.toml
 
 # Expose the default port
 EXPOSE 8080
 
 # Run the binary
 ENTRYPOINT ["/app/as-webhook"]
-CMD ["-port", "8080"]
+CMD ["-port", "8080", "-config", "/app/config/config.toml"]
