@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/fly-deploy.yml"
+      - ".github/workflows/deploy.yml"
       - "Dockerfile"
       - ".dockerignore"
       - "fly.toml"
