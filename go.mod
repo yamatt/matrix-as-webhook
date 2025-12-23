@@ -3,7 +3,7 @@ module github.com/yamatt/go-as-webhook
 go 1.24.11
 
 require (
-	github.com/BurntSushi/toml v1.4.0
+	github.com/BurntSushi/toml v1.6.0
 	github.com/google/cel-go v0.20.1
 	github.com/gorilla/mux v1.8.1
 )
