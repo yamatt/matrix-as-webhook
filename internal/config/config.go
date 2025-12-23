@@ -10,7 +10,9 @@ const defaultHTTPMethod = "POST"
 
 // Config represents the application configuration.
 type Config struct {
-	Routes []RouteConfig `toml:"routes"`
+	// ASToken is the Application Service token from the AS_TOKEN environment variable
+	ASToken string
+	Routes  []RouteConfig `toml:"routes"`
 }
 
 // RouteConfig defines a routing rule for messages.
@@ -46,6 +48,9 @@ func Load(filename string) (*Config, error) {
 		return nil, err
 	}
 
+	// Load AS token from environment variable
+	cfg.ASToken = os.Getenv("AS_TOKEN")
+
 	ApplyDefaults(&cfg)
 
 	return &cfg, nil
@@ -78,7 +83,10 @@ func ApplyDefaults(cfg *Config) {
 
 // NewDefault creates a default configuration with defaults applied.
 func NewDefault() *Config {
-	cfg := &Config{Routes: []RouteConfig{}}
+	cfg := &Config{
+		ASToken: os.Getenv("AS_TOKEN"),
+		Routes:  []RouteConfig{},
+	}
 	ApplyDefaults(cfg)
 	return cfg
 }

@@ -28,13 +28,57 @@ func NewAppServer(cfg *config.Config) *AppServer {
 	}
 }
 
+// validateASToken is middleware that validates the AS token from query parameter.
+func (s *AppServer) validateASToken(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If no AS token is configured, skip validation
+		if s.config.ASToken == "" {
+			log.Printf("Warning: AS_TOKEN not set, skipping authentication")
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check access_token in query parameters
+		token := r.URL.Query().Get("access_token")
+		if token == "" {
+			log.Printf("Access denied: missing access_token parameter")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"errcode": "M_FORBIDDEN",
+				"error":   "Missing access_token",
+			})
+			return
+		}
+
+		if token != s.config.ASToken {
+			log.Printf("Access denied: invalid access_token")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"errcode": "M_FORBIDDEN",
+				"error":   "Invalid access_token",
+			})
+			return
+		}
+
+		// Token is valid, proceed to next handler
+		next.ServeHTTP(w, r)
+	})
+}
+
 // Router sets up the HTTP routes for the application server.
 func (s *AppServer) Router() http.Handler {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/_matrix/app/v1/transactions/{txnId}", s.handleTransaction).Methods("PUT")
-	r.HandleFunc("/_matrix/app/v1/rooms/{roomAlias}", s.handleRoom).Methods("GET")
-	r.HandleFunc("/_matrix/app/v1/users/{userId}", s.handleUser).Methods("GET")
+	// Matrix API endpoints with AS token validation
+	matrixAPI := r.PathPrefix("/_matrix/app/v1").Subrouter()
+	matrixAPI.Use(s.validateASToken)
+	matrixAPI.HandleFunc("/transactions/{txnId}", s.handleTransaction).Methods("PUT")
+	matrixAPI.HandleFunc("/rooms/{roomAlias}", s.handleRoom).Methods("GET")
+	matrixAPI.HandleFunc("/users/{userId}", s.handleUser).Methods("GET")
+
+	// Health check endpoint (no auth required)
 	r.HandleFunc("/health", s.handleHealth).Methods("GET")
 
 	return r
