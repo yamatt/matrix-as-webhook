@@ -5,7 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    assignees:
+      - yamatt
     labels:
       - "dependencies"
       - "go"
@@ -15,7 +16,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    assignees:
+      - yamatt
     labels:
       - "dependencies"
       - "github-actions"
@@ -25,7 +27,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    assignees:
+      - yamatt
     labels:
       - "dependencies"
       - "docker"
