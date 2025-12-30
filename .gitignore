@@ -34,3 +34,4 @@ go.work.sum
 # Binary
 /as-webhook
 registration.yaml
+config.toml
