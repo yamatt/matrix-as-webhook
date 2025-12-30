@@ -2,6 +2,10 @@
 
 A Matrix Application Server written in Go to route messages as webhooks. This server receives messages from Matrix homeservers and forwards them to HTTP endpoints based on configurable routing rules.
 
+This can be helpful if you have secondary services, such as a bot, or a function, that you don't want to run continuously, listening for messages that only appear occasionally.
+
+This AS can be set up as a single service, and can be configured with [complex logic](https://cel.dev/) to call out or forward messages to a simple HTTP endpoint.
+
 ## Features
 
 - **Matrix Application Server Protocol**: Implements the Matrix AS API endpoints
@@ -91,6 +95,8 @@ selector = "true"
 webhook_url = "http://localhost:9000/default"
 method = "POST"
 ```
+
+The `AS_TOKEN` can be set via the `AS_TOKEN` environment variable.
 
 ### Configuration Options
 
