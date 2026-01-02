@@ -32,6 +32,12 @@ func main() {
 		cfg = config.NewDefault()
 	}
 
+	// print found config routes
+	for _, route := range cfg.Routes {
+		log.Printf("Loaded route: Name=%s, Method=%s, Selector=%s, WebhookURL=%s, SendBody=%v",
+			route.Name, route.Method, route.Selector, route.WebhookURL, *route.SendBody)
+	}
+
 	srv := server.NewAppServer(cfg)
 
 	addr := fmt.Sprintf(":%d", cliArgs.Port)
