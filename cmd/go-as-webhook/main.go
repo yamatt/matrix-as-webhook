@@ -34,8 +34,7 @@ func main() {
 
 	// print found config routes
 	for _, route := range cfg.Routes {
-		log.Printf("Loaded route: Name=%s, Method=%s, Selector=%s, WebhookURL=%s, SendBody=%v",
-			route.Name, route.Method, route.Selector, route.WebhookURL, *route.SendBody)
+		log.Printf("Loaded route: Name=%s", route.Name)
 	}
 
 	srv := server.NewAppServer(cfg)
