@@ -41,6 +41,19 @@ docker run -p 8080:8080 -v $(pwd)/config.toml:/app/config.toml as-webhook -confi
 ./as-webhook -config config.toml -port 8080
 ```
 
+### Add to channel
+
+1. Invite the bot to the channel
+1. Run the following to add the AS to the channel:
+
+```sh
+curl -X POST \
+    "https://homeserver.org/_matrix/client/v3/join/!<channel id>?user_id=%40<user id>
+    -H "Authorization: Bearer <AS token>" \
+    -H "Content-Type: application/json" \
+    -d '{}'
+```
+
 ### Command-line Options
 
 - `<config>`: Config file path as positional argument (overrides `-config` flag)
