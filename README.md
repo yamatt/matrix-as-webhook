@@ -76,6 +76,7 @@ Homeservers (HS) require an Application Service registration file to know how to
 ```
 
 The generated `registration.yaml` includes:
+
 - **id**: `matrix-as-webhook`
 - **url**: The public URL you pass via `-server`
 - **as_token**: Provided via `-as-token`, or securely generated if omitted
@@ -134,7 +135,7 @@ shared_secret = "my-secret-key-12345"
 
 When a `shared_secret` is configured, as-webhook signs each webhook request using HMAC-SHA256 and includes the signature in the `X-Webhook-Signature` header:
 
-```
+```text
 X-Webhook-Signature: sha256=abcdef0123456789...
 ```
 
@@ -143,6 +144,7 @@ X-Webhook-Signature: sha256=abcdef0123456789...
 Your webhook endpoint should verify the signature using the shared secret:
 
 **Python example:**
+
 ```python
 import hmac
 import hashlib
@@ -167,48 +169,50 @@ def verify_webhook(request, shared_secret):
 ```
 
 **Go example:**
+
 ```go
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
-	"io"
-	"net/http"
+    "crypto/hmac"
+    "crypto/sha256"
+    "encoding/hex"
+    "io"
+    "net/http"
 )
 
 func verifyWebhook(r *http.Request, sharedSecret string) bool {
-	signature := r.Header.Get("X-Webhook-Signature")
-	if signature == "" {
-		return false
-	}
+    signature := r.Header.Get("X-Webhook-Signature")
+    if signature == "" {
+        return false
+    }
 
-	body, _ := io.ReadAll(r.Body)
-	defer r.Body.Close()
+    body, _ := io.ReadAll(r.Body)
+    defer r.Body.Close()
 
-	h := hmac.New(sha256.New, []byte(sharedSecret))
-	h.Write(body)
-	expectedSig := "sha256=" + hex.EncodeToString(h.Sum(nil))
+    h := hmac.New(sha256.New, []byte(sharedSecret))
+    h.Write(body)
+    expectedSig := "sha256=" + hex.EncodeToString(h.Sum(nil))
 
-	return hmac.Equal([]byte(signature), []byte(expectedSig))
+    return hmac.Equal([]byte(signature), []byte(expectedSig))
 }
 ```
 
 **Node.js example:**
+
 ```javascript
 const crypto = require('crypto');
 
 function verifyWebhook(req, sharedSecret) {
-	const signature = req.headers['x-webhook-signature'];
-	if (!signature) return false;
+    const signature = req.headers['x-webhook-signature'];
+    if (!signature) return false;
 
-	const hmac = crypto.createHmac('sha256', sharedSecret);
-	hmac.update(req.rawBody); // Make sure you capture the raw body
-	const expectedSig = 'sha256=' + hmac.digest('hex');
+    const hmac = crypto.createHmac('sha256', sharedSecret);
+    hmac.update(req.rawBody); // Make sure you capture the raw body
+    const expectedSig = 'sha256=' + hmac.digest('hex');
 
-	return crypto.timingSafeEqual(
-		Buffer.from(signature),
-		Buffer.from(expectedSig)
-	);
+    return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSig)
+    );
 }
 ```
 
