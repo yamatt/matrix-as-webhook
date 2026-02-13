@@ -10,6 +10,7 @@ on:
       - "Dockerfile"
       - ".dockerignore"
       - "fly.toml"
+  workflow_dispatch:
 
 permissions:
   contents: read
