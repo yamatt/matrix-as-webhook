@@ -10,6 +10,12 @@ on:
       - "Dockerfile"
       - ".dockerignore"
       - "fly.toml"
+  workflow_run:
+    workflows:
+      - Auto-merge
+    types:
+      - completed
+  # Trigger when config file has been manually updated
   workflow_dispatch:
 
 permissions:
