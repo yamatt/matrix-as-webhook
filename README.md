@@ -1,10 +1,10 @@
 # as-webhook
 
-A Matrix Application Server written in Go to route messages as webhooks. This server receives messages from Matrix homeservers and forwards them to HTTP endpoints based on configurable routing rules.
+A Matrix Application Server convert messages to webhooks. This server receives messages from Matrix homeservers and forwards them to HTTP endpoints based on configurable routing rules.
 
 This can be helpful if you have secondary services, such as a bot, or a function, that you don't want to run continuously, listening for messages that only appear occasionally.
 
-This AS can be set up as a single service, and can be configured with [complex logic](https://cel.dev/) to call out or forward messages to a simple HTTP endpoint.
+This AS can be set up as a single service, and can be configured with [CEL](https://cel.dev/) to call out or forward messages to a simple HTTP endpoint.
 
 ## Features
 
@@ -59,32 +59,28 @@ curl -X POST \
 - `<config>`: Config file path as positional argument (overrides `-config` flag)
 - `-config`: Path to configuration file (default: `config.toml`)
 - `-port`: Port to listen on (default: `8080`)
-- `-generate-registration <path>`: Generate a Matrix AS `registration.yaml` at the given path and exit
+- `-generate-registration <path>`: Generate a Matrix AS `registration.yaml` at the given path
 - `-server <url>`: Public URL where this AS is reachable (used in `registration.yaml`)
 - `-as-token <token>`: Optional AS token to include in the registration (auto-generated if omitted)
 
 ### Generate registration.yaml
 
-Homeservers (HS) require an Application Service registration file to know how to talk to this AS. You can have the AS generate this file for you:
+Homeservers (HS) require an Application Service registration file to know how to talk to this AS.
+
+Provide the generated file to your homeserver according to its AS registration process (e.g., placing it in the HS config and restarting).
+
+
+You can have the AS generate this file for you:
 
 ```bash
 # Minimal: writes registration.yaml with generated tokens
 ./as-webhook -generate-registration registration.yaml -server http://localhost:8080
-
-# With a custom AS token
-./as-webhook -generate-registration registration.yaml -server http://app.local:8080 -as-token my-custom-token-12345
 ```
 
-The generated `registration.yaml` includes:
-
-- **id**: `matrix-as-webhook`
-- **url**: The public URL you pass via `-server`
-- **as_token**: Provided via `-as-token`, or securely generated if omitted
-- **hs_token**: Securely generated token for the HS to authenticate to the AS
-- **rate_limited**: `false` by default
-- **namespaces**: Empty by default (this AS does not require reserved user namespaces)
-
-Provide the generated file to your homeserver according to its AS registration process (e.g., placing it in the HS config and restarting).
+With a custom AS token
+```bash
+./as-webhook -generate-registration registration.yaml -server http://app.local:8080 -as-token my-custom-token-12345
+```
 
 ## Configuration
 
