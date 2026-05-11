@@ -1,4 +1,4 @@
-name: Build
+name: Test
 
 on:
   push:
@@ -12,8 +12,17 @@ on:
       - "go.sum"
       - ".dockerignore"
       - "Dockerfile"
-    tags:
-      - "v*"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "**.go"
+      - "cmd/**"
+      - "internal/**"
+      - "go.mod"
+      - "go.sum"
+      - ".dockerignore"
+      - "Dockerfile"
 
 permissions:
   contents: read
@@ -24,9 +33,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+      - name: Go Format check
+        run: go fmt ./...
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v6
+        with:
+          files: ./coverage.txt
+          fail_ci_if_error: false
+
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -54,6 +90,7 @@ jobs:
   docker:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Check out code
         uses: actions/checkout@v6
