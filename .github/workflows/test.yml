@@ -2,16 +2,6 @@ name: Test
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "**.go"
-      - "cmd/**"
-      - "internal/**"
-      - "go.mod"
-      - "go.sum"
-      - ".dockerignore"
-      - "Dockerfile"
   pull_request:
     branches:
       - "main"
