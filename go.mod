@@ -1,4 +1,4 @@
-module github.com/yamatt/go-as-webhook
+module github.com/yamatt/matrix-as-webhook
 
 go 1.26
 

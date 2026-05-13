@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/google/cel-go/cel"
-	"github.com/yamatt/go-as-webhook/internal/config"
+	"github.com/yamatt/matrix-as-webhook/internal/config"
 )
 
 type Target struct {

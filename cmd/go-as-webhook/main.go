@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/yamatt/go-as-webhook/internal/args"
-	"github.com/yamatt/go-as-webhook/internal/config"
-	"github.com/yamatt/go-as-webhook/internal/registration"
-	"github.com/yamatt/go-as-webhook/internal/server"
+	"github.com/yamatt/matrix-as-webhook/internal/args"
+	"github.com/yamatt/matrix-as-webhook/internal/config"
+	"github.com/yamatt/matrix-as-webhook/internal/registration"
+	"github.com/yamatt/matrix-as-webhook/internal/server"
 )
 
 func main() {

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/yamatt/go-as-webhook/internal/config"
-	"github.com/yamatt/go-as-webhook/internal/router"
-	"github.com/yamatt/go-as-webhook/internal/webhook"
+	"github.com/yamatt/matrix-as-webhook/internal/config"
+	"github.com/yamatt/matrix-as-webhook/internal/router"
+	"github.com/yamatt/matrix-as-webhook/internal/webhook"
 )
 
 // AppServer represents the Matrix Application Server.
