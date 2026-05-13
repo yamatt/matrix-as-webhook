@@ -3,8 +3,13 @@
 name: Fly Deploy
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - main
+  workflow_run:
+    workflows:
+      - Auto-merge
+    types:
+      - completed
 
 permissions:
   contents: read
@@ -12,6 +17,7 @@ jobs:
   deploy:
     name: Deploy app
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     concurrency: deploy-group # optional: ensure only one action runs at a time
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
