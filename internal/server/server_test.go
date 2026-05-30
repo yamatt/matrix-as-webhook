@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	configpkg "github.com/yamatt/go-as-webhook/internal/config"
+	configpkg "github.com/yamatt/matrix-as-webhook/internal/config"
 )
 
 func TestHandleHealth(t *testing.T) {

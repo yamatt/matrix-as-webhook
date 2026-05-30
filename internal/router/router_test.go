@@ -3,7 +3,7 @@ package router
 import (
 	"testing"
 
-	"github.com/yamatt/go-as-webhook/internal/config"
+	"github.com/yamatt/matrix-as-webhook/internal/config"
 )
 
 func TestResolve_CELSelectors(t *testing.T) {
