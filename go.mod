@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/BurntSushi/toml v1.6.0
-	github.com/google/cel-go v0.28.1
+	github.com/google/cel-go v0.29.1
 	github.com/gorilla/mux v1.8.1
 	gopkg.in/yaml.v3 v3.0.1
 )
