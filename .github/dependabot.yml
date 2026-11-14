@@ -9,9 +9,13 @@ updates:
       default-days: 7
     assignees:
       - yamatt
+    groups:
+      minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     labels:
-      - "dependencies"
-      - "go"
+      - dependency
+      - go
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -22,9 +26,13 @@ updates:
       default-days: 7
     assignees:
       - yamatt
+    groups:
+      minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     labels:
-      - "dependencies"
-      - "github-actions"
+      - dependency
+      - github-actions
 
   # Enable version updates for Docker
   - package-ecosystem: "docker"
@@ -35,6 +43,10 @@ updates:
       default-days: 7
     assignees:
       - yamatt
+    groups:
+      minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     labels:
-      - "dependencies"
-      - "docker"
+      - dependency
+      - docker
